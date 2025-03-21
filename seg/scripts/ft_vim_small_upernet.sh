@@ -1,6 +1,6 @@
 #!/bin/bash
 # bash /client-tools/repair_A100.sh
-source /mnt/bn/lianghuidata/miniconda/bin/activate /mnt/bn/lianghuidata/miniconda/envs/vim-seg
+source /home/yys/miniconda3/etc/profile.d/conda.sh
 cd /mnt/bn/lianghuidata/Vim/seg
 
 SEG_CONFIG=configs/vim/upernet/upernet_vim_small_24_512_slide_60k.py

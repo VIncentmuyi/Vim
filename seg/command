@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=1 python train.py configs/vim/upernet/upernet_vim_tiny_24_512_slide_60k.py --work-dir output/loveda/ --load-from pretrained/vim_t_midclstok_ft_78p3acc.pth
