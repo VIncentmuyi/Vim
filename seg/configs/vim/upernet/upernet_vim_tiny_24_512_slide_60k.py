@@ -11,7 +11,7 @@
 # https://github.com/microsoft/Swin-Transformer
 # --------------------------------------------------------'
 _base_ = [
-    '../../_base_/models/upernet_vim.py', '../../_base_/datasets/ade20k.py',
+    '../../_base_/models/upernet_vim.py', '../../_base_/datasets/loveda.py',
     '../../_base_/default_runtime.py', '../../_base_/schedules/schedule_60k.py'
 ]
 crop_size = (512, 512)

@@ -1,6 +1,6 @@
 # dataset settings
-dataset_type = 'LoveDADataset'
-data_root = 'data/loveDA'
+dataset_type = 'LoveDA'
+data_root = '/home/yys/Vim/data'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 crop_size = (512, 512)
@@ -37,18 +37,18 @@ data = dict(
     train=dict(
         type=dataset_type,
         data_root=data_root,
-        img_dir='img_dir/train',
-        ann_dir='ann_dir/train',
+        img_dir='2021LoveDA/train/Urban/images_png',
+        ann_dir='2021LoveDA/train/Urban/masks_png',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         data_root=data_root,
-        img_dir='img_dir/val',
-        ann_dir='ann_dir/val',
+        img_dir='2021LoveDA/Val/Urban/images_png',
+        ann_dir='2021LoveDA/Val/Urban/masks_png',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         data_root=data_root,
-        img_dir='img_dir/val',
-        ann_dir='ann_dir/val',
+        img_dir='2021LoveDA/Test/Urban/images_png',
+        #ann_dir='ann_dir/val',
         pipeline=test_pipeline))
