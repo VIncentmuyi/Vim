@@ -1,5 +1,5 @@
 # dataset settings
-dataset_type = 'LoveDA'
+dataset_type = 'LoveDADataset'
 data_root = '/home/yys/Vim/data'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -37,8 +37,8 @@ data = dict(
     train=dict(
         type=dataset_type,
         data_root=data_root,
-        img_dir='2021LoveDA/train/Urban/images_png',
-        ann_dir='2021LoveDA/train/Urban/masks_png',
+        img_dir='2021LoveDA/Train/Urban/images_png',
+        ann_dir='2021LoveDA/Train/Urban/masks_png',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
