@@ -1,1 +1,13 @@
-CUDA_VISIBLE_DEVICES=1 python train.py configs/vim/upernet/upernet_vim_tiny_24_512_slide_60k.py --work-dir output/loveda/ --load-from pretrained/vim_t_midclstok_ft_78p3acc.pth
+python train.py configs/vim/upernet/upernet_vim_tiny_24_512_slide_60k.py --work-dir output/loveda/ --load-from pretrained/vim_t_midclstok_ft_78p3acc.pth
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/yys/miniconda3/envs/vim_seg/lib:/home/yys/miniconda3/envs/vim_seg/lib/python3.9/site-packages/torch/lib
+
+
+pkill -9 python
+
+conv1d_out = causal_conv1d_cuda.causal_conv1d_fwd(
+x, conv1d_weight, conv1d_bias, None, True
+)
+
+dx, dconv1d_weight, dconv1d_bias = causal_conv1d_cuda.causal_conv1d_bwd(
+    x, conv1d_weight, conv1d_bias, dconv1d_out, None, None, True
+)

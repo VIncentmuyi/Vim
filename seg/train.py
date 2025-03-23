@@ -64,7 +64,18 @@ def parse_args():
 
 def main():
     args = parse_args()
-
+    if args.launcher == 'none':
+        import os
+        import torch.distributed as dist
+        os.environ['MASTER_ADDR'] = 'localhost'
+        os.environ['MASTER_PORT'] = '29500'
+        os.environ['WORLD_SIZE'] = '1'
+        os.environ['RANK'] = '0'
+        dist.init_process_group(
+            backend='nccl',
+            init_method='env://'
+        )
+        print("已强制初始化分布式环境，使用单进程模式")
     cfg = Config.fromfile(args.config)
     if args.options is not None:
         cfg.merge_from_dict(args.options)

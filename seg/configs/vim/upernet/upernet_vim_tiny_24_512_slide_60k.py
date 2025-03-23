@@ -15,7 +15,6 @@ _base_ = [
     '../../_base_/default_runtime.py', '../../_base_/schedules/schedule_60k.py'
 ]
 crop_size = (512, 512)
-
 model = dict(
     backbone=dict(
         type='VisionMambaSeg',
@@ -66,7 +65,7 @@ lr_config = dict(_delete_=True, policy='poly',
                  power=1.0, min_lr=0.0, by_epoch=False)
 
 # By default, models are trained on 4 GPUs with 8 images per GPU
-data=dict(samples_per_gpu=8, workers_per_gpu=16)
+data=dict(samples_per_gpu=4, workers_per_gpu=8)
 
 runner = dict(type='IterBasedRunnerAmp')
 
