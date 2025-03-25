@@ -8,6 +8,7 @@ Mostly copy-paste from torchvision references.
 import io
 import os
 import time
+import numpy as np
 from collections import defaultdict, deque
 import datetime
 
@@ -240,24 +241,94 @@ def init_distributed_mode(args):
 
 # if 'pos_embed' in state_dict:
 def interpolate_pos_embed(model, state_dict):
-    pos_embed_checkpoint = state_dict['pos_embed']
-    embedding_size = pos_embed_checkpoint.shape[-1]
-    num_patches = model.patch_embed.num_patches
-    num_extra_tokens = model.pos_embed.shape[-2] - num_patches
-    # import ipdb; ipdb.set_trace()
-    # height (== width) for the checkpoint position embedding
-    orig_size = int((pos_embed_checkpoint.shape[-2] - num_extra_tokens) ** 0.5)
-    # height (== width) for the new position embedding
-    new_size = int(num_patches ** 0.5)
-    # class_token and dist_token are kept unchanged
-    if orig_size != new_size:
-        print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))
-        extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
-        # only the position tokens are interpolated
-        pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
-        pos_tokens = pos_tokens.reshape(-1, orig_size, orig_size, embedding_size).permute(0, 3, 1, 2)
+    # 检查位置编码是否存在
+    if 'pos_embed' not in state_dict:
+        print("预训练模型中没有位置编码(pos_embed)，跳过位置编码插值")
+        return
+
+    try:
+        pos_embed_checkpoint = state_dict['pos_embed']
+        embedding_size = pos_embed_checkpoint.shape[-1]  # 应该是192
+
+        # 获取当前模型位置编码的形状
+        pos_embed_current = model.pos_embed  # 形状为 [1, 1024, 192]
+
+        print(f"预训练模型位置编码形状: {pos_embed_checkpoint.shape}")
+        print(f"当前模型位置编码形状: {pos_embed_current.shape}")
+
+        # 对于ViT类模型，197通常是196个patch位置+1个class token
+        # 1024是32x32=1024个patch位置
+
+        # 假设第一个是class token
+        num_extra_tokens = 1
+
+        # 提取class token
+        if pos_embed_checkpoint.shape[1] > 1:
+            class_token = pos_embed_checkpoint[:, 0:num_extra_tokens, :]
+            pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:, :]
+        else:
+            class_token = None
+            pos_tokens = pos_embed_checkpoint
+
+        # 计算原始尺寸和目标尺寸
+        src_size = int((pos_embed_checkpoint.shape[1] - num_extra_tokens) ** 0.5 + 0.1)  # 添加小量避免浮点误差
+        dst_size = int((pos_embed_current.shape[1] - num_extra_tokens) ** 0.5 + 0.1)
+
+        print(f"预训练模型位置编码：{src_size}x{src_size}, 目标：{dst_size}x{dst_size}")
+
+        # 强制重塑为14x14x192，即使形状不完全匹配
+        # 197-1=196，或者近似为14*14=196
+        try:
+            pos_tokens = pos_tokens.reshape(-1, src_size, src_size, embedding_size)
+        except RuntimeError:
+            print(f"无法将位置编码重塑为 {src_size}x{src_size}，尝试强制重塑")
+            # 确定最接近的尺寸
+            total_tokens = pos_tokens.shape[1]
+            actual_size = int(np.sqrt(total_tokens) + 0.5)  # 四舍五入
+            print(f"检测到实际尺寸为: {actual_size}x{actual_size}")
+
+            # 裁剪或填充到完美平方形
+            if actual_size ** 2 > total_tokens:
+                # 需要填充
+                padding_needed = actual_size ** 2 - total_tokens
+                print(f"填充 {padding_needed} 个令牌")
+                padding = torch.zeros((pos_tokens.shape[0], padding_needed, embedding_size),
+                                      device=pos_tokens.device, dtype=pos_tokens.dtype)
+                pos_tokens = torch.cat([pos_tokens, padding], dim=1)
+            elif actual_size ** 2 < total_tokens:
+                # 需要裁剪
+                print(f"裁剪到 {actual_size}x{actual_size}")
+                pos_tokens = pos_tokens[:, :actual_size ** 2, :]
+
+            src_size = actual_size
+            pos_tokens = pos_tokens.reshape(-1, src_size, src_size, embedding_size)
+
+        # 执行插值
+        pos_tokens = pos_tokens.permute(0, 3, 1, 2)  # [B, C, H, W]
         pos_tokens = torch.nn.functional.interpolate(
-            pos_tokens, size=(new_size, new_size), mode='bicubic', align_corners=False)
-        pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
-        new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
+            pos_tokens, size=(dst_size, dst_size), mode='bicubic', align_corners=False)
+        pos_tokens = pos_tokens.permute(0, 2, 3, 1)  # [B, H, W, C]
+        pos_tokens = pos_tokens.reshape(1, dst_size * dst_size, embedding_size)
+
+        # 如果有class token，则拼接回去
+        if class_token is not None and num_extra_tokens > 0:
+            # 检查当前模型是否也有class token
+            if pos_embed_current.shape[1] > dst_size * dst_size:
+                new_pos_embed = torch.cat([class_token, pos_tokens], dim=1)
+            else:
+                # 当前模型没有class token，只使用位置编码
+                new_pos_embed = pos_tokens
+        else:
+            new_pos_embed = pos_tokens
+
+        # 更新状态字典
         state_dict['pos_embed'] = new_pos_embed
+        print(f"位置编码已插值，新形状: {new_pos_embed.shape}")
+
+    except Exception as e:
+        import traceback
+        print(f"位置编码插值失败: {e}")
+        print(traceback.format_exc())
+        print("跳过位置编码插值，但继续加载其他参数")
+        if 'pos_embed' in state_dict:
+            del state_dict['pos_embed']  # 删除不兼容的位置编码，允许其他参数继续加载
