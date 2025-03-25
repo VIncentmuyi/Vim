@@ -4,11 +4,13 @@ import os
 import os.path as osp
 import time
 
+from mmseg.datasets.builder import DATASETS
 import mmcv
 import torch
 from mmcv.runner import init_dist
 from mmcv.utils import Config, DictAction, get_git_hash
-
+import mmcv_custom   # noqa: F401,F403
+import mmseg_custom   # noqa: F401,F403
 from mmseg import __version__
 from mmseg.apis import set_random_seed
 from mmcv_custom import train_segmentor

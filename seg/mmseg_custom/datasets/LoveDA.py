@@ -3,7 +3,7 @@ from mmseg.datasets.builder import DATASETS
 from mmseg.datasets.custom import CustomDataset
 
 @DATASETS.register_module(force=True)
-class LoveDADataset(CustomDataset):
+class LovedaDataset(CustomDataset):
     """LoveDA dataset.
 
     In segmentation map annotation for LoveDA dataset, 0 is the ignore index.
@@ -16,8 +16,8 @@ class LoveDADataset(CustomDataset):
                [159, 129, 183], [0, 255, 0], [255, 195, 128]]
 
     def __init__(self, **kwargs):
-        super(LoveDADataset, self).__init__(
+        super(LovedaDataset, self).__init__(
             img_suffix='.png',
             seg_map_suffix='.png',
-            reduce_zero_label=True,
+            reduce_zero_label=False,
             **kwargs)

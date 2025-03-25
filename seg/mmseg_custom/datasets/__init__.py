@@ -1,6 +1,3 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .mapillary import MapillaryDataset  # noqa: F401,F403
-from .potsdam import PotsdamDataset  # noqa: F401,F403
-from .pipelines import *  # noqa: F401,F403
-from .uavid import uavidDataset
-from .LoveDA import LoveDADataset
+from .LoveDA import LovedaDataset
+from .uavid import UAVidDataset
