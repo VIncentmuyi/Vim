@@ -6,7 +6,7 @@
 # --------------------------------------------------------'
 _base_ = [
     '../../_base_/models/upernet_vim.py', '../../_base_/datasets/uavid.py',
-    '../../_base_/default_runtime.py', '../../_base_/schedules/schedule_80k.py'
+    '../../_base_/default_runtime.py', '../../_base_/schedules/schedule_150k.py'
 ]
 crop_size = (512, 512)
 pretrained='pretrained/vim_t_midclstok_76p1acc.pth'
@@ -53,11 +53,11 @@ optimizer = dict(_delete_=True,
                  paramwise_cfg=dict(num_layers=24, layer_decay_rate=0.95)
                 )
 
-lr_config = dict(_delete_=True, policy='CosineAnnealing',
+lr_config = dict(_delete_=True, policy='poly',
                  warmup='linear',
                  warmup_iters=1500,
                  warmup_ratio=1e-5,
-#power=1.0,
+                 power=1.0,
                  min_lr=0.0, by_epoch=False)
 
 # By default, models are trained on 4 GPUs with 8 images per GPU
