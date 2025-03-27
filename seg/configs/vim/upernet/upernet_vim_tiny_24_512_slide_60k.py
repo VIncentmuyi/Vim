@@ -46,7 +46,7 @@ model = dict(
 
 optimizer = dict(_delete_=True,
                  type='AdamW',
-                 lr=2e-4,
+                 lr=3e-4,
                  betas=(0.9, 0.999),
                  weight_decay=0.05,
                  constructor='LayerDecayOptimizerConstructor',
@@ -55,13 +55,13 @@ optimizer = dict(_delete_=True,
 
 lr_config = dict(_delete_=True, policy='poly',
                  warmup='linear',
-                 warmup_iters=1500,
-                 warmup_ratio=1e-5,
+                 warmup_iters=1000,
+                 warmup_ratio=1e-4,
                  power=1.0,
                  min_lr=0.0, by_epoch=False)
 
 # By default, models are trained on 4 GPUs with 8 images per GPU
-data=dict(samples_per_gpu=8, workers_per_gpu=8)
+data=dict(samples_per_gpu=8, workers_per_gpu=4)
 
 runner = dict(type='IterBasedRunnerAmp')
 
@@ -73,5 +73,5 @@ optimizer_config = dict(
     grad_clip=None,
     coalesce=True,
     bucket_size_mb=-1,
-    use_fp16=False,
+    use_fp16=None,
 )
